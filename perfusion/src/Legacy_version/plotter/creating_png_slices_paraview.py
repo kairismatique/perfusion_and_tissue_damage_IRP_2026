@@ -1,7 +1,9 @@
+import os
+
 from paraview.simple import *
 
 # Load the .xdmf file
-xdmf_file = OpenDataFile("results/p0000/perfusion_LMCAo/perfusion.xdmf")
+xdmf_file = OpenDataFile("results/p0000_legacy/perfusion_LMCAo/perfusion.xdmf")
 xdmf_file.UpdatePipeline()
 
 # Create slice filter
@@ -65,7 +67,7 @@ else:
     print(f"Warning: Data range for '{color_array_name}' not found or is empty in cell data. Cannot set grayscale colormap accurately.")
 
 # Function to save slice image
-def save_slice(normal, origin, filename):
+def save_slice(normal, origin, filename, output_folder):
     # Update the slice plane
     sliceFilter.SliceType.Origin = origin
     sliceFilter.SliceType.Normal = normal
@@ -93,7 +95,8 @@ def save_slice(normal, origin, filename):
     renderView.ResetCamera()
 
     # Save the screenshot
-    SaveScreenshot(filename, renderView, ImageResolution=[800, 800])
+    output_name = output_folder + filename
+    SaveScreenshot(output_name, renderView, ImageResolution=[800, 800])
 
 # Get data bounds (these are geometry bounds, not data value bounds)
 bounds = xdmf_file.GetDataInformation().GetBounds()
@@ -104,8 +107,12 @@ z_range = bounds[5] - bounds[4]
 # Initial camera setup for the overall view
 renderView.ResetCamera() # Ensure initial camera is also reset
 
+# Create directory if it doesn't exist
+output_folder = "results/paraview_slices/"
+os.makedirs(output_folder, exist_ok=True)
+
 # Take 4 slices in each direction
 for i in range(1, 5):
-    save_slice([1,0,0], [bounds[0] + i*x_range/5, 0, 0], f"x{i:02d}.png")
-    save_slice([0,1,0], [0, bounds[2] + i*y_range/5, 0], f"y{i:02d}.png")
-    save_slice([0,0,1], [0, 0, bounds[4] + i*z_range/5], f"z{i:02d}.png")
+    save_slice([1,0,0], [bounds[0] + i*x_range/5, 0, 0], f"x{i:02d}.png", output_folder)
+    save_slice([0,1,0], [0, bounds[2] + i*y_range/5, 0], f"y{i:02d}.png", output_folder)
+    save_slice([0,0,1], [0, 0, bounds[4] + i*z_range/5], f"z{i:02d}.png", output_folder)
