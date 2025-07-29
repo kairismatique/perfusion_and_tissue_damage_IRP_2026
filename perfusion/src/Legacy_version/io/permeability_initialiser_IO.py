@@ -1,42 +1,8 @@
 import yaml
 from dolfin import *
 import numpy as np
-import untangle
 
 
-def permeability_initialiser_config_reader(input_file_path):
-    """
-    Read and parse permeability initialisation configuration from an XML file.
-
-    This function reads an XML-based configuration file using `untangle`, extracts
-    relevant values for the permeability tensor initialization process, including:
-    mesh path, reference vector, tensor components, result output folder, and
-    whether to save subresults.
-
-    Args:
-        input_file_path (str): Path to the XML configuration file.
-
-    Returns:
-        mesh_file (str): Path to the input mesh file.
-        e_ref (np.ndarray): Reference unit vector as a NumPy array of shape (3,).
-        K1_form (np.ndarray): Permeability tensor form as a NumPy 3x3 array.
-        result_folder (str): Path to the folder for saving results.
-        save_subres (bool): Flag indicating whether to save intermediate results.
-    """
-    configs = untangle.parse(input_file_path).permeability_initialiser
-
-    mesh_file = configs.input_files_and_folders.mesh_file.cdata.strip()
-
-    e_ref = np.array(list(map(float, configs.physical_variables.e_ref.cdata.split(','))))
-    K1_form = np.array(list(map(float, configs.physical_variables.K1_form.cdata.split(',')))).reshape((3, 3))
-
-    result_folder = configs.output_files_and_folders.res_fldr.cdata.strip()
-    save_subres = 'True' == configs.output_files_and_folders.save_subres.cdata.strip()
-
-    return mesh_file, e_ref, K1_form, result_folder, save_subres
-
-
-# TODO: never used ?
 def permeability_initialiser_config_reader_yml(input_file_path):
     """
     Load and parse a permeability initialisation configuration from a YAML file.
