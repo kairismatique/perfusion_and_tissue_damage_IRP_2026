@@ -127,11 +127,10 @@ def apply_mixed_BC(mesh, boundaries, integrals_N, BCs, BC_data, V_space, b1, dS,
     return integrals_N, BCs
 
 
-def set_up_fe_solver2(mesh, boundaries, V, v_1, v_2, v_3, \
+def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
                          p, p_1, p_2, p_3, K1, K2, K3, beta12, beta23, \
                          pa, pv, read_inlet_boundary, inlet_boundary_file, inlet_BC_type, **kwarg):
     model_type = kwarg.get('model_type', 'acv')
-
 
     # Source terms are equal to zero
     sigma1 = Constant(0.0)
