@@ -169,7 +169,7 @@ exit_program = False
 if not GeneralFunctions.is_non_zero_file(coupled_resistance_file):
     # set up finite element solver
     LHS, RHS, sigma1, sigma2, sigma3, BCs = \
-        fe_mod.set_up_fe_solver2(mesh, subdomains, boundaries, Vp, v_1, v_2, v_3, p, p1, p2, p3, K1, K2, K3, beta12,
+        fe_mod.set_up_fe_solver(mesh, boundaries, Vp, v_1, v_2, v_3, p, p1, p2, p3, K1, K2, K3, beta12,
                                  beta23,
                                  p_arterial, p_venous, configs['input']['read_inlet_boundary'],
                                  configs['input']['inlet_boundary_file'],
@@ -447,7 +447,7 @@ def coupledmodel(P, stopp):
                                     model_type=compartmental_model, vel_order=velocity_order)
 
         LHS, RHS, sigma1, sigma2, sigma3, BCs = \
-            fe_mod.set_up_fe_solver2(mesh, subdomains, boundaries, Vp, v_1, v_2, v_3,
+            fe_mod.set_up_fe_solver(mesh, boundaries, Vp, v_1, v_2, v_3,
                                      p, p1, p2, p3, K1, K2, K3, beta12, beta23,
                                      p_arterial, p_venous,
                                      configs['input']['read_inlet_boundary'], configs['input']['inlet_boundary_file'],
@@ -579,7 +579,7 @@ with contextlib.redirect_stdout(None):
                                 model_type=compartmental_model, vel_order=velocity_order)
 
     LHS, RHS, sigma1, sigma2, sigma3, BCs = \
-        fe_mod.set_up_fe_solver2(mesh, subdomains, boundaries, Vp, v_1, v_2, v_3, p, p1, p2, p3, K1, K2, K3, beta12,
+        fe_mod.set_up_fe_solver(mesh, boundaries, Vp, v_1, v_2, v_3, p, p1, p2, p3, K1, K2, K3, beta12,
                                  beta23, p_arterial, p_venous,
                                  configs['input']['read_inlet_boundary'], configs['input']['inlet_boundary_file'],
                                  configs['input']['inlet_BC_type'], model_type=compartmental_model)

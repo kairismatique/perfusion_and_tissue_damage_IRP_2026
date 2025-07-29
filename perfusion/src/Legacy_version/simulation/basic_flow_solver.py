@@ -226,7 +226,7 @@ def main():
     start2 = time.time() # Start timer for second step
 
     # Set up finite element solver
-    LHS, RHS, sigma1, sigma2, sigma3, BCs = fe_module.set_up_fe_solver2(mesh, subdomains, boundaries, Vp, v_1, v_2, v_3,
+    LHS, RHS, sigma1, sigma2, sigma3, BCs = fe_module.set_up_fe_solver(mesh, boundaries, Vp, v_1, v_2, v_3,
                                                                      p, p1, p2, p3, K1, K2, K3, beta12, beta23,
                                                                      p_arterial, p_venous,
                                                                      configs['input']['read_inlet_boundary'],

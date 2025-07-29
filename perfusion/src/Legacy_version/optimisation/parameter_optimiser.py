@@ -24,7 +24,7 @@ def cost_function(param_values, configs, mesh, subdomains, boundaries, K2_space,
 
     # set up finite element solver
     LHS, RHS, sigma1, sigma2, sigma3, BCs = \
-        fe_mod.set_up_fe_solver2(mesh, subdomains, boundaries, Vp, v_1, v_2, v_3,
+        fe_mod.set_up_fe_solver(mesh, boundaries, Vp, v_1, v_2, v_3,
                                  p, p1, p2, p3, K1, K2, K3, beta12, beta23,
                                  configs['physical']['p_arterial'], configs['physical']['p_venous'],
                                  configs['input']['read_inlet_boundary'], configs['input']['inlet_boundary_file'],
@@ -271,7 +271,7 @@ if rank == 0:
 
 # # set up finite element solver
 # LHS, RHS, sigma1, sigma2, sigma3, BCs = \
-#     fe_mod.set_up_fe_solver2(mesh, subdomains, boundaries, Vp, v_1, v_2, v_3, \
+#     fe_mod.set_up_fe_solver(mesh, boundaries, Vp, v_1, v_2, v_3, \
 #          p, p1, p2, p3, K1, K2, K3, beta12, beta23, \
 #          configs['physical']['p_arterial'], configs['physical']['p_venous'], \
 #          configs['input']['read_inlet_boundary'], configs['input']['inlet_boundary_file'], configs['input']['inlet_BC_type'])
