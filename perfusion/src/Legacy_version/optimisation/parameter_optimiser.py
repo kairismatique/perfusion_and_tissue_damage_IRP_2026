@@ -162,7 +162,7 @@ parser.add_argument("--res_fldr", help="path to results folder (string ended wit
                     type=str, default=None)
 config_file = parser.parse_args().config_file
 
-configs = basic_flow_solver_IO.basic_flow_config_reader_yml(config_file, parser)
+configs = basic_flow_solver_IO.basic_flow_config_reader_yaml(config_file, parser)
 
 try:
     compartmental_model = configs['simulation']['model_type'].lower().strip()

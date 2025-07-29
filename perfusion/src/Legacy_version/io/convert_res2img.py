@@ -310,7 +310,7 @@ def main():
 
     voxel_size = prepare_voxel_size(args)
 
-    configs = basic_flow_solver_IO.basic_flow_config_reader_yml(config_file, parser)
+    configs = basic_flow_solver_IO.basic_flow_config_reader_yaml(config_file, parser)
     results_folder = configs['output']['res_fldr']
 
     # Simulation parameters

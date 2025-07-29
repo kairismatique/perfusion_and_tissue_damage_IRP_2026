@@ -3,7 +3,7 @@ from dolfin import *
 import yaml
 
 
-def basic_flow_config_reader_yml(input_file_path, parser):
+def basic_flow_config_reader_yaml(input_file_path, parser):
     """
     Load and update simulation configuration from a YAML file and command-line parser overrides.
 

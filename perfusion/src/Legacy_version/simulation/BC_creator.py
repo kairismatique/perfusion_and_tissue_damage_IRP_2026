@@ -194,7 +194,7 @@ def main():
     config_file = args.config_file
 
     # Get basic configurations
-    configs = basic_flow_solver_IO.basic_flow_config_reader_yml(config_file, parser)
+    configs = basic_flow_solver_IO.basic_flow_config_reader_yaml(config_file, parser)
     mesh_file = configs['input']['mesh_file']
     result_file = configs['input']['inlet_boundary_file']
     physical_configs = configs['physical']
