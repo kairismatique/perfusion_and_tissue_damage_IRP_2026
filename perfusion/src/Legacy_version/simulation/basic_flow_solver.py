@@ -194,7 +194,7 @@ def main():
 
     # Determine functions spaces
     Vp, Vvel, v_1, v_2, v_3, p, p1, p2, p3, K1_space, K2_space = \
-        fe_module.alloc_fct_spaces(mesh, simulation_configs.get('fe_degr'),
+        fe_module.allocation_functions_space(mesh, simulation_configs.get('fe_degr'),
                                 model_type=compartmental_model, vel_order=velocity_order)
 
     # Initialise permeability tensors

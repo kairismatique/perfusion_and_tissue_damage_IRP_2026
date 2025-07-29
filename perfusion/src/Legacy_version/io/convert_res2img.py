@@ -323,7 +323,7 @@ def main():
 
     # Determine functions space
     Vp, Vvel, v_1, v_2, v_3, p, p1, p2, p3, K1_space, K2_space = \
-        fe_mod.alloc_fct_spaces(mesh, simulation.get('fe_degr'), model_type=compartmental_model,
+        fe_mod.allocation_functions_space(mesh, simulation.get('fe_degr'), model_type=compartmental_model,
                                 vel_order=velocity_order)
 
     # Check if variable is a valid variable

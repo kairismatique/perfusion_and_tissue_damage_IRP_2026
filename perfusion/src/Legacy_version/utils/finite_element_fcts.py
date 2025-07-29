@@ -16,24 +16,17 @@ def mesh_reader(mesh_file):
     return mesh, subdomains, boundaries
 
 
-def alloc_fct_spaces(mesh, fe_degr, **kwarg):
-    if 'model_type' in kwarg:
-        model_type = kwarg.get('model_type')
-    else:
-        model_type = 'acv'
-    
-    if 'vel_order' in kwarg:
-        vel_order = kwarg.get('vel_order')
-    else:
-        vel_order = fe_degr-1
-    
+def allocation_functions_space(mesh, fe_degr, **kwarg):
+    # Retrieve parameters
+    model_type = kwarg.get('model_type', 'acv')
+    vel_order = kwarg.get('vel_order', fe_degr - 1)
     
     if model_type == 'acv':
-        # element type and degree
+        # Element type and degree
         P = FiniteElement('Lagrange', tetrahedron, fe_degr)
-        # define mixed element (3D vector)
+        # Define mixed element (3D vector)
         element = MixedElement([P, P, P])
-        # define continous function space for pressure
+        # Define continous function space for pressure
         Vp = FunctionSpace(mesh, element)
         
         # Define test functions
@@ -43,18 +36,9 @@ def alloc_fct_spaces(mesh, fe_degr, **kwarg):
         p = TrialFunction(Vp)
         # Split pressure function to access components
         p_1, p_2, p_3 = split(p)
-        
-        # define discontinous function space for permeability tensors
-        K1_space = TensorFunctionSpace(mesh, "DG", 0)
-        K2_space = FunctionSpace(mesh, "DG", 0)
-        
-        # define function space for velocity vectors
-        if vel_order == 0:
-            Vvel = VectorFunctionSpace(mesh, "DG", vel_order)
-        else:
-            Vvel = VectorFunctionSpace(mesh, "Lagrange", vel_order)
+
     elif model_type == 'a':
-        # define continous function space for pressure
+        # Define continous function space for pressure
         Vp = FunctionSpace(mesh, "Lagrange", fe_degr)
         
         # Define test functions
@@ -64,18 +48,19 @@ def alloc_fct_spaces(mesh, fe_degr, **kwarg):
         p = TrialFunction(Vp)
         # Split pressure function to access components
         p_1, p_2, p_3 = [], [], []
-        
-        # define discontinous function space for permeability tensors
-        K1_space = TensorFunctionSpace(mesh, "DG", 0)
-        K2_space = FunctionSpace(mesh, "DG", 0)
-        
-        # define function space for velocity vectors
-        if vel_order == 0:
-            Vvel = VectorFunctionSpace(mesh, "DG", vel_order)
-        else:
-            Vvel = VectorFunctionSpace(mesh, "Lagrange", vel_order)
+
     else:
-        raise Exception("unknown model type: " + model_type)
+        raise Exception("Unknown model type: " + model_type)
+
+    # Define discontinuous function space for permeability tensors
+    K1_space = TensorFunctionSpace(mesh, "DG", 0)
+    K2_space = FunctionSpace(mesh, "DG", 0)
+
+    # Define function space for velocity vectors
+    if vel_order == 0:
+        Vvel = VectorFunctionSpace(mesh, "DG", vel_order)
+    else:
+        Vvel = VectorFunctionSpace(mesh, "Lagrange", vel_order)
     
     return Vp, Vvel, v_1, v_2, v_3, p, p_1, p_2, p_3, K1_space, K2_space
 

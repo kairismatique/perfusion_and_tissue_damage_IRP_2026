@@ -138,7 +138,7 @@ mesh, subdomains, boundaries = IO_fcts.mesh_reader(configs['input']['mesh_file']
 
 # determine fct spaces
 Vp, Vvel, v_1, v_2, v_3, p, p1, p2, p3, K1_space, K2_space = \
-    fe_mod.alloc_fct_spaces(mesh, configs['simulation']['fe_degr'], model_type=compartmental_model,
+    fe_mod.allocation_functions_space(mesh, configs['simulation']['fe_degr'], model_type=compartmental_model,
                             vel_order=velocity_order)
 
 # initialise permeability tensors
@@ -443,7 +443,7 @@ def coupledmodel(P, stopp):
     # Run perfusion model
     with contextlib.redirect_stdout(None):
         Vp, Vvel, v_1, v_2, v_3, p, p1, p2, p3, K1_space, K2_space = \
-            fe_mod.alloc_fct_spaces(mesh, configs['simulation']['fe_degr'],
+            fe_mod.allocation_functions_space(mesh, configs['simulation']['fe_degr'],
                                     model_type=compartmental_model, vel_order=velocity_order)
 
         LHS, RHS, sigma1, sigma2, sigma3, BCs = \
@@ -575,7 +575,7 @@ start3 = time.time()
 
 with contextlib.redirect_stdout(None):
     Vp, Vvel, v_1, v_2, v_3, p, p1, p2, p3, K1_space, K2_space = \
-        fe_mod.alloc_fct_spaces(mesh, configs['simulation']['fe_degr'],
+        fe_mod.allocation_functions_space(mesh, configs['simulation']['fe_degr'],
                                 model_type=compartmental_model, vel_order=velocity_order)
 
     LHS, RHS, sigma1, sigma2, sigma3, BCs = \
