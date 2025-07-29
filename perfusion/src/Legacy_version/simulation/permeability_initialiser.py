@@ -128,7 +128,7 @@ def main():
     # Get arguments
     parser = create_perm_initialiser_parser()
     config_file = parser.parse_args().config_file
-    configs = permeability_initialiser_IO.permeability_initialiser_config_reader_yml(config_file)
+    configs = permeability_initialiser_IO.permeability_initialiser_config_reader_yaml(config_file)
     physical_configs = configs['physical']
     results_folder = configs['output']['res_fldr']
 

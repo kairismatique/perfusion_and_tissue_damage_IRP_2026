@@ -3,7 +3,7 @@ from dolfin import *
 import numpy as np
 
 
-def permeability_initialiser_config_reader_yml(input_file_path):
+def permeability_initialiser_config_reader_yaml(input_file_path):
     """
     Load and parse a permeability initialisation configuration from a YAML file.
 
