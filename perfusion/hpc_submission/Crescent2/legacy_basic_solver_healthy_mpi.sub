@@ -10,7 +10,7 @@
 ##
 ## Enter a job name after the -N on the line below:
 ##
-#PBS -N legacy-basic_flow_solver_mpi
+#PBS -N legacy-basic_solver_healthy_mpi
 ##
 ## STEP 2:
 ##
@@ -87,7 +87,7 @@ module load OpenMPI
 ## Unless you are sure do not change the default parameters
 ##
 
-echo "Running the basic flow solver"
+echo "Running the basic flow solver for a healthy case"
 
 export HDF5_USE_FILE_LOCKING=FALSE
 export DOLFIN_JIT_CACHE_DIR=/mnt/.jitcache
