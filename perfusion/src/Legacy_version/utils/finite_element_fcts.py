@@ -318,8 +318,9 @@ def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
             if boundary_labels[i] > 2:
                 # Brain surface boundary
                 if inlet_BC_type == 'DBC':
-                    BCs.append(DirichletBC(V.sub(0), Constant(pa), boundaries, boundary_labels[i]))
-                BCs.append(DirichletBC(V.sub(2), Constant(pv), boundaries, boundary_labels[i]))
+                    BCs.append(DirichletBC(V_space, Constant(pa), boundaries, boundary_labels[i]))
+                if model_type == "acv":
+                    BCs.append(DirichletBC(V.sub(2), Constant(pv), boundaries, boundary_labels[i]))
 
     if model_type == 'acv':
         # Define variational problem
