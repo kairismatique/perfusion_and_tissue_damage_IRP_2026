@@ -137,7 +137,7 @@ def populate_boundary_matrix_test(mask, boundary_labels, boundary_map, boundary_
 
             boundary_matrix.append([label, flow, pressure, mapped_value, 0])
 
-    return np.array(boundary_matrix)
+    return np.array(boundary_matrix, dtype=object)
 
 
 def adjust_boundaries_conditions_with_occlusion(physical_configs, boundary_matrix, occluded_ID):
