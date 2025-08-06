@@ -1,8 +1,9 @@
+import os
+import pandas as pd
 from dolfin import *
 import numpy as np
 
 
-#%%
 def set_coupling_coeff(beta):
     beta12 = beta[0,1]
     beta13 = beta[0,2]
@@ -705,16 +706,24 @@ def compute_integral_quantities(configs,myResults,my_integr_vars,mesh,subdomains
         surf_int_values = surf_int_values.transpose()
         volu_int_values = np.array(volu_int_values)
         volu_int_values = volu_int_values.transpose()
-        
-        
-    
+
         if save_data:
-            if len(surf_int_values)>0:
-                np.savetxt(configs['output']['res_fldr']+'surface_integrals.csv',\
-                              surf_int_values,surf_int_dat_struct[:-1],header=surf_int_header[:-1])
-            if len(volu_int_values)>0:
-                np.savetxt(configs['output']['res_fldr']+'volume_integrals.csv',\
-                              volu_int_values,volu_int_dat_struct,header=volu_int_header[:-1])
+            results_folder = configs['output']['res_fldr'].strip()
+            os.makedirs(results_folder, exist_ok=True)
+
+            surf_path = os.path.join(results_folder, 'surface_integrals.csv')
+            volu_path = os.path.join(results_folder, 'volume_integrals.csv')
+
+            if len(surf_int_values) > 0:
+                # Build DataFrame from array-like + header string
+                surf_cols = [c.strip() for c in surf_int_header[:-1].split(',')] if surf_int_header else None
+                df_surf = pd.DataFrame(np.asarray(surf_int_values), columns=surf_cols)
+                df_surf.to_csv(surf_path, index=False)
+
+            if len(volu_int_values) > 0:
+                volu_cols = [c.strip() for c in volu_int_header[:-1].split(',')] if volu_int_header else None
+                df_volu = pd.DataFrame(np.asarray(volu_int_values), columns=volu_cols)
+                df_volu.to_csv(volu_path, index=False)
         return surf_int_values, surf_int_header, volu_int_values, volu_int_header
     else:
         if rank==0:
