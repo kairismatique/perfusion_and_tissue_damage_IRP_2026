@@ -4,7 +4,7 @@ Pipeline
 In order to run the simulation, you should run the following pipeline steps:
 
 1. **Extract Meshes**:
-   - Unpack `brain_meshes.tar.xz` into the project directory.
+   - Unpack `brain_meshes.tar.xz` into the project directory.²
    - You can use
 
 2. **Initialize Permeability**:

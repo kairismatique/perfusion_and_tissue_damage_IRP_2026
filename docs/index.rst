@@ -48,7 +48,7 @@ The GitHub repository of the project can be found `here <https://github.com/Gemi
    files/container
    files/usage
    files/structure
-   files/modernisation_concise
+   files/pipeline
    files/performance 
    files/IO_fcts
    files/finite_element_fcts
