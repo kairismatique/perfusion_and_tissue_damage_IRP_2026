@@ -40,8 +40,13 @@ your local machine, you can import it using the same command as before:
 
     scp -r container.sif your_plg_username@ares.cyfronet.pl:~/folder_where_to_copy
 
-If not, it can be build using a submission file. Ares login nodes don't support apptainer or singularity, but the
-compute nodes do. This step can take quite some time, up to 10 to 15 minutes.
+If not, it can be build using a submission file. Ares login nodes don't support Apptainer or Singularity, but the
+compute nodes do. This step can take quite some time, up to 20 minutes.
+
+Once the container is built, you will now need to update some scripts. All the submission files need to be verified.
+Go into the folder hpc_submission/Ares and review all the files with the extension
+.sh. Please ensure that the paths cited in the files exist. They will mostly depend on the location of the perfusion
+project.
 
 The initial setup is now finished. Those steps will not be to be redone.
 
@@ -53,7 +58,7 @@ from the root folder of the project using:
 
 .. code-block:: bash
 
-   	sbatch your_submission_file.sh
+    sbatch your_submission_file.sh
 
 To see the state of your job, you can use:
 
