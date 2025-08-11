@@ -14,7 +14,17 @@ aims at creating digital twins of stroke patients. It is a European project, fun
 Europe research and innovation programme.
 
 Before Gemini, the perfusion project was part of the **INSIST** project, *IN-Silico trials for acute Ischaemic STroke*,
-which seeks to model real-world clinical trials of Acute Ischaemic Stroke.
+which seeks to model real-world clinical trials of Acute Ischaemic Stroke. A simple graph of the project structure is
+available in figure 1. The perfusion model is included in the second module.
+
+.. figure:: files/images/GEMINI_structure.png
+   :align: center
+
+   Figure 1: INSIST modules’ workflow. The process begins with generating a virtual patient cohort based on demographic
+   and anatomical data (e.g., age, sex, vessel geometry, thrombus characteristics). These virtual patients undergo
+   stroke treatment simulations involving models of arterial blood flow, perfusion, tissue health thrombolysis and
+   thrombectomy. Neurological deficits and functional recovery are then predicted. Finally, the results are aggregated
+   into an in silico trial report summarizing patient outcomes.
 
 Find more information about those project here:
 
@@ -38,7 +48,7 @@ The GitHub repository of the project can be found `here <https://github.com/Gemi
    files/container
    files/usage
    files/structure
-   files/modernisation_concise
+   files/pipeline
    files/performance 
    files/IO_fcts
    files/finite_element_fcts

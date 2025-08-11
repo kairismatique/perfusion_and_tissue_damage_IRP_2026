@@ -14,8 +14,8 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Modernisation" href="modernisation_concise.html" />
-    <link rel="prev" title="Usage" href="usage.html" />
+    <link rel="next" title="Pipeline" href="modernisation_concise.html" />
+    <link rel="prev" title="Using a container" href="container.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -63,6 +63,8 @@ However, each folder contains a <code class="docutils literal notranslate"><span
 │   │   │   └── utils/
 │   │   └── X_version/
 │   │   │   ├── io/
+│   │   │   ├── plotter/
+│   │   │   ├── optimisation/
 │   │   │   ├── simulation/
 │   │   │   └── utils/
 │   ├── test/
@@ -88,7 +90,10 @@ of the perfusion simulations.</p>
 <section id="containers-folder">
 <h3>Containers folder<a class="headerlink" href="#containers-folder" title="Link to this heading">¶</a></h3>
 <p>The containers folder groups both <code class="docutils literal notranslate"><span class="pre">.def</span></code> and <code class="docutils literal notranslate"><span class="pre">.sif</span></code> files related to the containers of the project.
-The <code class="docutils literal notranslate"><span class="pre">.sif</span></code> file is supposed to be here after the container has been built.</p>
+The <code class="docutils literal notranslate"><span class="pre">.sif</span></code> file is supposed to be here when the container has been built.
+The container definition specifies two conda environments, one for FEniCS Legacy and another for FEniCS X.
+The environment for FEniCS Legacy is built using the <code class="docutils literal notranslate"><span class="pre">environment.yaml</span></code> file. It is a files that specifies the
+dependencies for the conda environment.</p>
 </section>
 <section id="boundary-data-folder">
 <h3>Boundary Data folder<a class="headerlink" href="#boundary-data-folder" title="Link to this heading">¶</a></h3>
@@ -102,16 +107,69 @@ or a new file could be generated using the the <code class="docutils literal not
 <section id="configs-folder">
 <h3>Configs folder<a class="headerlink" href="#configs-folder" title="Link to this heading">¶</a></h3>
 <p>This folder contains the configurations files with the extension <code class="docutils literal notranslate"><span class="pre">.yaml</span></code>, and a folder gathering some examples of
-configurations for the simulations.</p>
+configurations for the simulations.
+A typical configuration file contains data for the input and the output of the simulation, the physical parameters such
+as the arterial pressure, the simulation parameters such as the velocity order, and finally the optimisation parameters
+such as the parameters which are optimised.
+Below is an example for the <code class="docutils literal notranslate"><span class="pre">permeability_initialiser.py</span></code> simulation, which initialises the permeability tensor.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">input</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># xdmf file refering to a tetrahedral mesh with labelled boundaries and subdomains</span>
+<span class="w">    </span><span class="nt">mesh_file</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;./brain_meshes/b0000/clustered.xdmf&#39;</span>
+<span class="nt">output</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># folder for results</span>
+<span class="w">    </span><span class="nt">res_fldr</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;./brain_meshes/b0000/permeability/&#39;</span>
+<span class="w">    </span><span class="c1"># save sub-results</span>
+<span class="w">    </span><span class="nt">save_subres</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">res_vars</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&#39;K1_form&#39;</span><span class="p p-Indicator">}</span>
+<span class="nt">physical</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># normal vector of the cortical surface in the reference coordinate system</span>
+<span class="w">    </span><span class="nt">e_ref</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="c1"># arteriole/venule permeability tensor form [row1, row2, row3]</span>
+<span class="w">    </span><span class="nt">K1_form</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
 </section>
 <section id="hpc-submission-folder">
 <h3>HPC submission folder<a class="headerlink" href="#hpc-submission-folder" title="Link to this heading">¶</a></h3>
-<p>This folder contains two sub-folders, Ares and Crescent2, which gather all the submission files related to the HPC
-systems supported by the project.</p>
+<p>This folder contains two sub-folders, Crescent2 and Ares, in which are gathered the submission files
+for the HPC systems supported by the project.
+The files are created for a serial or a parallel job of the different simulation and
+run them inside a container imported into the HPC system.
+The two HPC systems do not support the same workload manager and therefore, the submission files have different
+structures.</p>
+<p>Crescent2 works under the Portable Batch System (PBS) and the submission files contains the extension <code class="docutils literal notranslate"><span class="pre">.sub</span></code>.
+The structure of the files follows the template provided by Cranfield University.
+A typical file contains a job name, the number of CPU/cores needed, the queue to run the job, the email of the user,
+the loading of the correct module for the environment, the command to execute.</p>
+<p>Ares relates on Slurm workload manager and the submission files have the extension <code class="docutils literal notranslate"><span class="pre">.sh</span></code>.
+As well as for PBS, the submission files contains information about the job name,
+the number of CPUs used and the time limit - the queue in PBS.
+It also has the output and error folders where the files are written after the job is finished.</p>
 </section>
 <section id="results">
 <h3>Results<a class="headerlink" href="#results" title="Link to this heading">¶</a></h3>
-<p>This folder gathers all the results from the simulations.</p>
+<p>This folder is the output folder for the simulations.
+The files are grouped by the simulation patient: usually healthy, LCMAo and RMCAo.
+The results are produced with the extension <code class="docutils literal notranslate"><span class="pre">.h5</span></code> and <code class="docutils literal notranslate"><span class="pre">.xdmf</span></code>.
+The information gathered can be related to the pressure, the velocity or the perfusion in the brain.
+An example for a LMCAo case is displayed in figure 1.</p>
+<figure class="align-center" id="id1">
+<img alt="../_images/paraview_brain_slices.png" src="../_images/paraview_brain_slices.png" />
+<figcaption>
+<p><span class="caption-text">Figure 1: Brain slices generated by simulation and visualised in Paraview in healthy (left) and LMCAo cases (right).</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The results contain some <code class="docutils literal notranslate"><span class="pre">.nii.gz</span></code> files, which are the format used in the medical field for medical images.
+It also contains <code class="docutils literal notranslate"><span class="pre">.png</span></code> photos which can be viewed easily.</p>
+<figure class="align-center" id="id2">
+<img alt="../_images/perfusion.png" src="../_images/perfusion.png" />
+<figcaption>
+<p><span class="caption-text">Figure 2: Photos extracted from the simulation in a LMCAo case in the <code class="docutils literal notranslate"><span class="pre">.png</span></code> format.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Finally, the results contains a <code class="docutils literal notranslate"><span class="pre">perfusion_outcome.yaml</span></code> which contains some data for the brain tissue
+in the stroke case, a <code class="docutils literal notranslate"><span class="pre">settings.yaml</span></code> file that contains configuration settings,
+and some <code class="docutils literal notranslate"><span class="pre">.csv</span></code> files that contains data about the simulation.</p>
 </section>
 <section id="src-folder">
 <h3>Src folder<a class="headerlink" href="#src-folder" title="Link to this heading">¶</a></h3>
@@ -123,12 +181,23 @@ order to always have a working version of the simulations available.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">io</span></code>: it contains the resources related to the inputs and outputs of the simulations;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">simulation</span></code>: it contains the scripts of the simulations (i.e. basic_flow_solver.py);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plotter</span></code>: it contains the scripts used to plot some results, such as the one displayed on figure 3;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimisation</span></code>: it contains the scripts which optimise the simulation parameters;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">utils</span></code>: it is a collection of useful resources.</p></li>
 </ul>
+<figure class="align-center" id="id3">
+<img alt="../_images/results_paraview_slicer.png" src="../_images/results_paraview_slicer.png" />
+<figcaption>
+<p><span class="caption-text">Figure 3: Results obtained for a LMCAo case with the Paraview slicer script.</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
 </section>
 <section id="test-folder">
 <h3>Test folder<a class="headerlink" href="#test-folder" title="Link to this heading">¶</a></h3>
-<p>This folder contains the tests of the project, especially the unit tests.</p>
+<p>This folder contains the tests of the project, especially the unit tests.
+They are classified in the same way as the source folder.
+It also contains a script which creates a fixture for the tests.
+It generates a simple cube slightly rotated with the <code class="docutils literal notranslate"><span class="pre">mesh_file_generation.py</span></code>.</p>
 </section>
 <section id="verification">
 <h3>Verification<a class="headerlink" href="#verification" title="Link to this heading">¶</a></h3>
@@ -167,20 +236,19 @@ order to always have a working version of the simulations available.</p>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="background.html">Background Theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background theory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="local.html">Running on a local machine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hpc.html">Running on HPC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="container.html">Using a container</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Project structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#folder-explanation">Folder explanation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#perfusion-folder">Perfusion folder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#docs-folder">Docs folder</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modernisation_concise.html">Modernisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modernisation_concise.html">Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Code Performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="IO_fcts.html">IO_fcts module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="finite_element_fcts.html">finite_element_fcts</a></li>
@@ -191,8 +259,8 @@ order to always have a working version of the simulations available.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="usage.html" title="previous chapter">Usage</a></li>
-      <li>Next: <a href="modernisation_concise.html" title="next chapter">Modernisation</a></li>
+      <li>Previous: <a href="container.html" title="previous chapter">Using a container</a></li>
+      <li>Next: <a href="modernisation_concise.html" title="next chapter">Pipeline</a></li>
   </ul></li>
 </ul>
 </div>

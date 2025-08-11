@@ -17,7 +17,16 @@ environment for each one of them.
 
 **Crescent2**
 
-Crescent2 is the Cranfield University facility open to students.
+Crescent2 is a Cranfield University facility available to students and researchers.
+It consists of 89 compute nodes, each equipped with:
+
+* Dual-socket Intel Xeon E5-2620 CPUs (2 sockets per node);
+* 16 CPU cores (total) per node, with 16 threads;
+* 128 GB of memory per node;
+* InfiniBand EDR interconnect for high-speed data transfer;
+* Operating system: Linux – Red Hat 8.4.
+
+Each user can access up to 96 cores simultaneously.
 
 A full **tutorial** on how to run the code on this facility is given here:
 `Running on Crescent2 <crescent2.html>`_.
