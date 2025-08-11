@@ -1,95 +1,105 @@
 Pipeline
 ========
 
-In order to run the simulation, you should run the following pipeline steps:
+The ``perfusion_runnner.sh`` file introduces a generic pipeline for the simulations.
 
-1. **Extract Meshes**:
-   - Unpack `brain_meshes.tar.xz` into the project directory.²
-   - You can use
+Main pipeline
+-------------
 
-2. **Initialize Permeability**:
-   - Run `permeability_initialiser.py` to compute permeability tensors:
-     .. code-block:: bash
+The usual pipeline for the simulation is described below.
 
-        mpirun -n 4 python3 src/Gem_X/permeability_initialiser.py
+1. **Extract the brain meshes**:
 
-     - Uses `config_permeability_initialiser.yaml`. Takes ~2 minutes with 4 cores.
+- Unpack `brain_meshes.tar.xz` into the project directory.
+- This command only need to be run once.
+- You can use the following command if necessary:
 
-3. **Solve Flow**:
-   - Run `basic_flow_solver.py` for pressure and velocity fields:
-     .. code-block:: bash
+.. code-block:: bash
 
-        mpirun -n 4 python3 src/Gem_X/basic_flow_solver.py
+    tar xf ../brain_meshes.tar.xz
 
-     - Uses `config_basic_flow_solver.yaml`. Takes ~2 minutes with 4 cores.
+2. **Initialise the permeability tensor**:
 
-4. **Handle Occlusions**:
-   - Generate boundary conditions for occluded scenarios (e.g., right MCA occlusion):
-     .. code-block:: bash
+- Run `permeability_initialiser.py` to compute the permeability tensor.
+- This simulation only need to be run once.
+- You can use the following command to run it in parallel from the project directory:
 
-        python3 src/Gem_X/BC_creator.py
+.. code-block:: bash
 
-     - Update `config_basic_flow_solver.yaml` to point to the generated `BCs_RMCA.csv` and change the output folder to avoid overwriting.
+    mpirun -n 4 python3 -m src.Legacy_version.simulation.permeability_initialiser --config_file ./configs/config_permeability_initialiser.yaml
 
-Configuration Files
--------------------
+- Uses `config_permeability_initialiser.yaml` as a configuration file. It contains information about the mesh file, the output folder or physical parameters such as the arteriole/venule permeability tensor form.
+- This simulation will take up to 5 min with 4 cores, depending of the environment you are using (HPC systems, local). More information about the performance can be found here: `Performance <performance.html>`_.
 
-### Permeability Initialiser Config
+3. **Create boundary conditions**:
 
-The `config_permeability_initialiser.yaml` file controls permeability tensor generation:
+- Generate boundary conditions for occluded scenarios (e.g., healthy, LMCAo, RMCAo):
+- You can use the following command to run it in serial from the project directory:
 
-.. code-block:: yaml
+.. code-block:: bash
 
-    input:
-      mesh_file: '../brain_meshes/b0000/clustered.xdmf'
-    output:
-      res_fldr: '../brain_meshes/b0000/permeability/'
-      save_subres: false
-      res_vars: ['K1_form']
-    physical:
-      e_ref: [0, 0, 1]
-      K1_form: [0, 0, 0, 0, 0, 0, 0, 0, 1]
+    python3 -m src.Legacy_version.simulation.BC_creator --config_file ./configs/config_basic_flow_solver.yaml
 
-- **input/mesh_file**: Path to the mesh file.
-- **output/res_fldr**: Directory for saving tensors.
-- **physical/e_ref**: Reference normal vector for cortical surface orientation.
-- **physical/K1_form**: Permeability tensor (flattened 3x3 matrix).
+- The command presented here is adapted to a healthy case. To adapt it to an occluded case, please update the argument of the command.
+- Update `config_basic_flow_solver.yaml` to point to the generated boundary conditions file and change the output folder to avoid overwriting.
 
-### Basic Flow Solver Config
+4. **Solve Flow**:
 
-The `config_basic_flow_solver.yaml` file controls the flow simulation:
+- Run `basic_flow_solver.py` for pressure and velocity fields.
+- You can use the following command to run it in parallel from the project directory:
 
-.. code-block:: yaml
+.. code-block:: bash
 
-    input:
-      healthy: false
-      occl_ID: [25]
-      read_inlet_boundary: true
-      inlet_boundary_file: 'boundary_data/BCs_RMCA.csv'
-      mesh_file: '../brain_meshes/b0000/clustered.xdmf'
-      permeability_folder: '../brain_meshes/b0000/permeability/'
-      inlet_BC_type: 'DBC'
-    output:
-      res_fldr: '../VP_results/p0000/a/DBC/healthy/read_inlet_true/FE_degree_1/np8/'
-      res_vars: ['press1', 'vel1', 'perfusion']
-    physical:
-      K1gm_ref: 0.001234
-      beta12gm: 1.326e-06
-      p_arterial: 10000.0
-      p_venous: 0.0
-      Q_brain: 10.0
-    simulation:
-      fe_degr: 1
-      model_type: 'a'
-      vel_order: 1
+    mpirun -n 4 python3 -m src.Legacy_version.simulation.basic_flow_solver --config_file ./configs/config_basic_flow_solver.yaml
 
-- **input/healthy**: Toggle healthy (true) or occluded (false) scenarios.
-- **input/occl_ID**: List of occluded artery IDs (e.g., 25 for right MCA).
-- **output/res_fldr**: Output directory (change to avoid overwriting).
-- **physical/K1gm_ref**: Permeability for arterioles.
-- **simulation/fe_degr**: Finite element degree (1 for faster runs).
+- Uses `config_basic_flow_solver.yaml` as a configuration file. It contains information about the input and outputs files and folders, about physical, simulation and optimisation parameters.
+- This simulation will take up to 6 min with 4 cores, depending of the environment you are using (HPC systems, local). More information about the performance can be found here: `Performance <performance.html>`_.
+- The simulation has already three different cases supported: a healthy brain, a LMCAo and a RMCAo case. Three configurations files are available.:
+    - ``config_basic_flow_solver.yaml``
+    - ``config_basic_flow_solver_LMCAo.yaml``
+    - ``config_basic_flow_solver_RMCAo.yaml``
 
-**Tips**:
-- Maintain separate config files for different scenarios.
-- Ensure `occl_ID` matches mesh or CSV labels.
-- Use descriptive `res_fldr` names.
+Additional simulations
+----------------------
+
+Additional results can be produced using the following simulations, after the main pipeline have been produced one.
+
+1. **Convert the finite element results to a NIFTI format**:
+
+- Run `convert_res2img.py` to convert a ``.h5`` or ``.xdmf`` to a ``.nii.gz`` format.
+- You can use the following command to do so:
+
+.. code-block:: bash
+
+    python3 -m src.Legacy_version.io.convert_res2img --config_file ./results/p0000/perfusion_healthy/settings.yaml
+
+- Use the configuration file of the results you want to convert. Three files are available, once the main pipeline has been run for the three cases (healthy, LMCAo, RMCAo):
+    - ``./results/p0000/perfusion_healthy/settings.yaml``
+    - ``./results/p0000/perfusion_LMCAo/settings.yaml``
+    - ``./results/p0000/perfusion_RMCAo/settings.yaml``
+
+2. **Compute lesion volume proxies from brain perfusion images**:
+
+- Run `lesion_comp_from_img.py` to compute the lesion volume proxies form a healthy and occluded brain perfusion images.
+- Use the following command to run it in serial from the project directory:
+
+.. code-block:: bash
+
+    python3 -m src.Legacy_version.simulation.lesion_comp_from_img --healthy_file ./results/p0000/perfusion_healthy/perfusion.nii.gz --occluded_file ./results/p0000/perfusion_RMCAo/perfusion.nii.gz
+
+- Use the healthy and occluded images you want to test. The inputted files should be in the NIFTI format (``.nii.gz``).
+
+4. **Compute infarct volumes across a range of perfusion thresholds**:
+
+- Run `infarct_calculation_thresholds.py` to compute infarct volumes across a range of perfusion thresholds.
+- Use the following command to run it in parallel from the project directory:
+
+.. code-block:: bash
+
+    mpirun -n 4 python3 -m src.Legacy_version.simulation.infarct_calculation_thresholds --config_file ./configs/config_basic_flow_solver_RMCAo.yaml --baseline ./results/p0000/perfusion_healthy/perfusion.xdmf --occluded ./results/p0000/perfusion_RMCAo/perfusion.xdmf
+
+- Use the configuration file of the results you want to convert. Three files are available, once the main pipeline has been run for the three cases (healthy, LMCAo, RMCAo):
+    - ``./results/p0000/perfusion_healthy/settings.yaml``;
+    - ``./results/p0000/perfusion_LMCAo/settings.yaml``;
+    - ``./results/p0000/perfusion_RMCAo/settings.yaml``.
+- Adapt the occluded file to the configuration you have chosen.
