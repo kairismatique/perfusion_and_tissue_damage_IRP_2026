@@ -1,24 +1,11 @@
-Modernisation
-=============
+Pipeline
+========
 
-Introduction
-------------
-
-The GEMINI perfusion model simulates blood flow in brain tissue during acute ischemic stroke using a multi-compartment porous medium framework, implemented in FEniCSx. The pipeline includes:
-
-- **Pre-processing**: Preparing anatomical brain meshes.
-- **Permeability Initialization**: Computing tissue permeability tensors.
-- **Numerical Solution**: Solving for pressure and velocity fields under healthy or occluded conditions.
-
-The model uses human-readable YAML configuration files to define physical, numerical, and boundary parameters. This guide outlines the requirements and steps to run the model.
-
-Running the Perfusion Model
----------------------------
-
-### Pipeline Steps
+In order to run the simulation, you should run the following pipeline steps:
 
 1. **Extract Meshes**:
    - Unpack `brain_meshes.tar.xz` into the project directory.
+   - You can use
 
 2. **Initialize Permeability**:
    - Run `permeability_initialiser.py` to compute permeability tensors:

@@ -35,6 +35,7 @@ The GitHub repository of the project can be found `here <https://github.com/Gemi
    files/requirements
    files/local
    files/hpc
+   files/container
    files/usage
    files/structure
    files/modernisation_concise
