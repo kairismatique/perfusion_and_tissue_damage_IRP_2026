@@ -63,6 +63,16 @@ The requirements need to be installed as well into your conda environment. Use t
 
     pip install -r requirements.txt
 
+Extracting the brain meshes
+---------------------------
+
+The brain meshes are compressed in a ``.zip`` file. Before running the code, you will need to extract those.
+Use the following command.
+
+.. code-block:: bash
+
+    tar xf ../brain_meshes.tar.xz
+
 Running the perfusion code
 --------------------------
 
@@ -74,4 +84,3 @@ The ``README.md`` file in the perfusion folder gives a neat description of what 
     cd ~/perfusion_and_tissue_damage/perfusion/
     chmod +x perfusion_runner.sh
     ./perfusion_runner.sh
-	

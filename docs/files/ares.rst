@@ -50,6 +50,16 @@ project.
 
 The initial setup is now finished. Those steps will not be to be redone.
 
+Extracting the brain meshes
+---------------------------
+
+The brain meshes are compressed in a ``.zip`` file. Before running the code, you will need to extract those.
+Use the following command.
+
+.. code-block:: bash
+
+    tar xf ../brain_meshes.tar.xz
+
 Running the code
 ----------------
 
