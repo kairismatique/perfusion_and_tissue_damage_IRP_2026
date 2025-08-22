@@ -33,7 +33,7 @@ The usual pipeline for the simulation is described below.
 
 3. **Create boundary conditions**:
 
-- Generate boundary conditions for occluded scenarios (e.g., healthy, LMCAo, RMCAo):
+- Generate boundary conditions for all scenarios, but especially occluded scenarios (e.g., LMCAo, RMCAo):
 - You can use the following command to run it in serial from the project directory:
 
 .. code-block:: bash
@@ -42,6 +42,13 @@ The usual pipeline for the simulation is described below.
 
 - The command presented here is adapted to a healthy case. To adapt it to an occluded case, please update the argument of the command.
 - Update `config_basic_flow_solver.yaml` to point to the generated boundary conditions file and change the output folder to avoid overwriting.
+- In the *.csv summarising the boundary conditions the cortical surface regions are numbered so that:
+    - 21 - left ACA
+    - 22 - left MCA
+    - 23 - left PCA
+    - 24 - right ACA
+    - 25 - right MCA
+    - 26 - right PCA
 
 4. **Solve Flow**:
 
