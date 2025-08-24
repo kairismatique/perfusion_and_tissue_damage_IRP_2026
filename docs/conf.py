@@ -5,16 +5,7 @@
 
 import os
 import sys
-
-from pathlib import Path
-
-# docs/ is here → go one level up to project_root
-ROOT = Path(__file__).resolve().parents[1]
-
-# add the folder that contains "simulations"
-PKG_DIR = ROOT / "perfusion" / "src" / "Legacy_version"
-
-sys.path.insert(0, str(PKG_DIR))
+sys.path.insert(0, os.path.abspath('../perfusion/src/Legacy_version'))
 
 
 # -- Project information -----------------------------------------------------
@@ -35,7 +26,7 @@ extensions = [
     'sphinx_autodoc_typehints',
 ]
 
-autodoc_mock_imports = ["dolfin", "fenics", "ufl", "petsc4py", "mpi4py", 'basix', 'basix.ufl', 'dolfinx']
+autodoc_mock_imports = ["dolfin", "fenics", "ufl", "petsc4py", "mpi4py", 'basix', 'basix.ufl', 'dolfinx', "pyyaml", "nibabel"]
 add_module_names = False
 
 templates_path = ['_templates']
