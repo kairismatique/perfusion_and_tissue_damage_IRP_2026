@@ -30,3 +30,5 @@ with the cerebral perfusion model; from main arteries to the pial surface. The e
 vessel network on distribution of blood on the pial surface is coupled with the response of perfusion in the brain.
 Then there are additional factors depending on perfusion: oxygen/nutrient delivery, tissue damage, and oedema/swelling
 (mechanical deformation of tissue) which are models also in development. The approach is modular in this respect.
+
+More information about the background theory of the project will be added to the documentation later.
