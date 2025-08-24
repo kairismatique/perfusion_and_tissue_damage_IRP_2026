@@ -1,5 +1,0 @@
-========================
-What This Software Does?
-========================
-
-* Models perfusion of blood in the human brain

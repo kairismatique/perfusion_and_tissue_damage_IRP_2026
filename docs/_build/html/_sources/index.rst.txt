@@ -41,7 +41,9 @@ The GitHub repository of the project can be found `here <https://github.com/Gemi
    :maxdepth: 2
    :hidden:
 
+   files/ais
    files/background
+   files/equations
    files/requirements
    files/local
    files/hpc
@@ -50,6 +52,8 @@ The GitHub repository of the project can be found `here <https://github.com/Gemi
    files/structure
    files/pipeline
    files/performance 
-   files/IO_fcts
-   files/finite_element_fcts
-   files/suppl_fcts
+   files/io/io
+   files/simulation/simulation
+   files/utils/utils
+   files/plotter/plotter
+   files/optimisation/optimisation
