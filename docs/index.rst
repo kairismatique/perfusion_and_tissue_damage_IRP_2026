@@ -41,17 +41,14 @@ The GitHub repository of the project can be found `here <https://github.com/Gemi
    :maxdepth: 2
    :hidden:
 
-   files/ais
-   files/background
-   files/equations
-   files/requirements
-   files/local
-   files/hpc
-   files/container
-   files/usage
-   files/structure
-   files/pipeline
-   files/performance 
-   files/IO_fcts
-   files/finite_element_fcts
-   files/suppl_fcts
+   files/theory/ais
+   files/theory/background
+   files/theory/equations
+   files/usage/requirements
+   files/usage/structure
+   files/usage/pipeline
+   files/tutorials/local
+   files/tutorials/hpc
+   files/tutorials/container
+   files/usage/performance
+   files/utils/utils
