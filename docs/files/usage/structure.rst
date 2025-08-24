@@ -46,8 +46,8 @@ However, each folder contains a ``README.md`` file to explain its content.
     └── docs/
         └── ...
 
-Folder explanation
-==================
+**Folder explanation**
+----------------------
 
 Perfusion folder
 -----------------
