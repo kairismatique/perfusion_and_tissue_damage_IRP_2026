@@ -4,30 +4,6 @@ import time
 from . import suppl_fcts
 
 
-def mesh_reader(mesh_file):
-    """
-    Reads mesh, subdomain, and boundary data from an HDF5 file.
-
-    Args:
-        mesh_file (str): The path to the HDF5 file containing the mesh data.
-
-    Returns:
-        tuple: A tuple containing:
-            - mesh (dolfin.cpp.mesh.Mesh): The mesh object.
-            - subdomains (dolfin.cpp.mesh.MeshFunction): MeshFunction storing subdomain markers (dimension 3).
-            - boundaries (dolfin.cpp.mesh.MeshFunction): MeshFunction storing boundary markers (dimension 2).
-    """
-    mesh = Mesh()
-    hdf = HDF5File(mesh.mpi_comm(), mesh_file, "r")
-    hdf.read(mesh, "/mesh", False)
-    subdomains = MeshFunction("size_t", mesh, 3)
-    hdf.read(subdomains, "/subdomains")
-    boundaries = MeshFunction("size_t", mesh, 2)
-    hdf.read(boundaries, "/boundaries")
-    hdf.close()
-    return mesh, subdomains, boundaries
-
-
 def allocation_functions_space(mesh, fe_degr, **kwarg):
     """
     Allocates finite element function spaces for pressure and velocity based on the specified model type.
