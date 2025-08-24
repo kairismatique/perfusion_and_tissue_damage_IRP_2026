@@ -41,7 +41,9 @@ The GitHub repository of the project can be found `here <https://github.com/Gemi
    :maxdepth: 2
    :hidden:
 
+   files/ais
    files/background
+   files/equations
    files/requirements
    files/local
    files/hpc
