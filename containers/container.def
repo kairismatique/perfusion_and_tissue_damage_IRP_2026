@@ -2,6 +2,9 @@ Bootstrap: docker
 From: ubuntu:22.04
 Stage: build
 
+%files
+    environment.yaml /conda_stuff/environment.yaml
+
 %post
     # System dependencies
     apt-get update && apt-get install -y --fix-missing \
@@ -57,19 +60,9 @@ Stage: build
     conda deactivate
 
     ###### Create FEniCS Legacy Environment ######
-    conda create -n fenics-legacy -c conda-forge python=3.9
+    cd /conda_stuff
+    conda env create -f environment.yaml
     conda activate fenics-legacy
-    conda install -c conda-forge \
-        fenics=2019.1.0 \
-        mpich=4.3.1 \
-        mpi4py=4.1.0 \
-        hdf5=*=mpi* \
-        h5py=*=mpi* \
-        pyyaml \
-        tqdm \
-        scipy \
-        untangle \
-        pkg-config
 
     echo "Testing mpi4py in fenics-legacy:"
     python -c "from mpi4py import MPI; print('Legacy MPI OK on rank', MPI.COMM_WORLD.Get_rank())"
