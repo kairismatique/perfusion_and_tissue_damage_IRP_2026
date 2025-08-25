@@ -1,4 +1,4 @@
-name: fenics-legacy-docs-test
+name: fenics-legacy
 channels:
   - conda-forge
   - defaults
