@@ -20,17 +20,28 @@ def hdf5_mesh_file(tmp_path):
     subdomains = MeshFunction("size_t", mesh, 3, 0)
     boundaries = MeshFunction("size_t", mesh, 2, 0)
 
-    hdf5_path = tmp_path / "test_mesh_rotated.h5"
-    hdf = HDF5File(MPI.comm_world, str(hdf5_path), "w")
-    hdf.write(mesh, "/mesh")
-    hdf.write(subdomains, "/subdomains")
-    hdf.write(boundaries, "/boundaries")
-    hdf.close()
+    # Base path for the files
+    base_path = tmp_path / "test_mesh_rotated"
+
+    # Write the main mesh file
+    mesh_xdmf_path = str(base_path) + ".xdmf"
+    with XDMFFile(MPI.comm_world, mesh_xdmf_path) as file:
+        file.write(mesh)
+
+    # Write the subdomains file
+    subdomains_xdmf_path = str(base_path) + '_physical_region.xdmf'
+    with XDMFFile(MPI.comm_world, subdomains_xdmf_path) as file:
+        file.write(subdomains)
+
+    # Write the boundaries file
+    boundaries_xdmf_path = str(base_path) + '_facet_region.xdmf'
+    with XDMFFile(MPI.comm_world, boundaries_xdmf_path) as file:
+        file.write(boundaries)
 
     return {
         "mesh": mesh,
         "subdomains": subdomains,
         "boundaries": boundaries,
-        "file": str(hdf5_path),
+        "file": mesh_xdmf_path,
         "tmp_path": tmp_path
     }
