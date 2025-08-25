@@ -6,7 +6,6 @@ Running on HPC
    :hidden:
 
    crescent2
-   archer2
    ares
 
 The code can be run in two version: serial or parallel. In order to run in parallel, you can either use your local
