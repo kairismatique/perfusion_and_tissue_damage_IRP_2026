@@ -1,0 +1,35 @@
+name: fenics-legacy
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - fenics
+  - matplotlib=3.5.3
+  - pytest
+  - pytest-mock
+  - pytest-cov
+  - setuptools=78.1.1=py39h06a4308_0
+  - fenics-ffc=2019.1.0=pyhd8ed1ab_40
+  - pip
+  - pip:
+      - click==8.1.8
+      - dill==0.4.0
+      - docopt==0.6.2
+      - meshio==4.4.6
+      - multiprocess==0.70.18
+      - nibabel==3.2.1
+      - numexpr==2.10.0
+      - numpy==1.21.3
+      - pandas==1.3.4
+      - pathos==0.2.8
+      - pox==0.3.6
+      - ppft==1.7.7
+      - pytz==2025.2
+      - pyyaml==6.0
+      - scipy==1.7.1
+      - tables==3.7.0
+      - tqdm==4.62.3
+      - untangle==1.1.1
+      - sphinx
+      - sphinx-autodoc-typehints
