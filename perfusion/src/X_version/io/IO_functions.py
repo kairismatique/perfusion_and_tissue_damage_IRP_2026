@@ -104,7 +104,6 @@ def read_function_from_h5(K, filename: str, dataset_name="Function"):
     dataset_name : str
         Logical key for the function dataset (e.g. "Function").
     """
-    print("reading h5")
     import h5py
     from mpi4py import MPI
     import numpy as np
@@ -121,8 +120,6 @@ def read_function_from_h5(K, filename: str, dataset_name="Function"):
             raise KeyError(
                 f"[Rank {rank}] Could not find dataset key for logical name '{dataset_name}' in '{filename}'")
         raw_data = f[dataset_key][()]
-        if rank == 0:
-            print(f"[Rank 0] Data shape from file '{filename}': {raw_data.shape} (key: '{dataset_key}')")
 
         if raw_data.ndim == 2:
             flat_data = raw_data.reshape(-1)
@@ -141,7 +138,6 @@ def read_function_from_h5(K, filename: str, dataset_name="Function"):
 
     # --- Step 4: Assign data to owned DoFs only ---
     K.x.array[:local_size] = flat_data[start:end]
-    print("h5 file read")
     return K.x.array
 
 
