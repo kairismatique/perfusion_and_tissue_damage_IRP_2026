@@ -1,4 +1,4 @@
-name: fenics-legacy-new-new
+name: fenics-legacy-docs-test
 channels:
   - conda-forge
   - defaults
@@ -32,3 +32,4 @@ dependencies:
       - tqdm==4.62.3
       - untangle==1.1.1
       - sphinx
+      - sphinx-autodoc-typehints
