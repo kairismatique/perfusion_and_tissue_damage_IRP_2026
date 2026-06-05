@@ -152,7 +152,7 @@ def compute_vessel_orientation(subdomains, boundaries, mesh, res_fldr, save_subr
     RHS = f * ve_test * ufl.dx  # Linear form
     # Initialise the function pe in the predefined function space
     pe = fem.Function(Vpe)
-    problem = LinearProblem(LHS, RHS, bcs=BCs, petsc_options={"ksp_type": "bcgs", "pc_type": "hypre"})
+    problem = LinearProblem(LHS, RHS, bcs=BCs, petsc_options={"ksp_type": "bcgs", "pc_type": "hypre"}, petsc_options_prefix="pe_")
     pe = problem.solve()
     # Lower the order to save or visualise the solution
     V_write = fem.functionspace(mesh, ("Lagrange", 1))
@@ -183,7 +183,7 @@ def compute_vessel_orientation(subdomains, boundaries, mesh, res_fldr, save_subr
     f_expr = -ufl.grad(pe)
     a_proj = ufl.inner(u_proj, v_proj) * ufl.dx(mesh)
     L_proj = ufl.inner(f_expr, v_proj) * ufl.dx(mesh)
-    problem_proj = LinearProblem(a_proj, L_proj, bcs=[], petsc_options={"ksp_type": "bcgs"})
+    problem_proj = LinearProblem(a_proj, L_proj, bcs=[], petsc_options={"ksp_type": "bcgs"}, petsc_options_prefix="proj_")
     E = problem_proj.solve()
 
     # Solve finite element problem for interpolation
@@ -194,7 +194,7 @@ def compute_vessel_orientation(subdomains, boundaries, mesh, res_fldr, save_subr
         v_dg = ufl.TestFunction(Ve_DG)
         a_proj_dg = ufl.inner(u_dg, v_dg) * ufl.dx(mesh)
         L_proj_dg = ufl.inner(E, v_dg) * ufl.dx(mesh)
-        problem_proj_dg = LinearProblem(a_proj_dg, L_proj_dg, bcs=[], petsc_options={"ksp_type": "bcgs"})
+        problem_proj_dg = LinearProblem(a_proj_dg, L_proj_dg, bcs=[], petsc_options={"ksp_type": "bcgs"}, petsc_options_prefix="proj_dg_")
         e = problem_proj_dg.solve()
     else:
         e = E
