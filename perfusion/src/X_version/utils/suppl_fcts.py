@@ -30,87 +30,6 @@ def set_coupling_coeff(beta):
     return beta12, beta13, beta21, beta23, beta31, beta32
 
 
-def region_label_assembler(region: Optional[dolfinx.mesh.MeshTags]) -> tuple[np.ndarray, int]:
-    """
-    Returns a list of unique region tags and how many unique regions there are.
-
-    The 2,164,216 faces from the mesh are split between each process, and the
-    attached meshtags are noted. The integer tags are recast. A list of the number
-    of faces that each process has managed is gathered in an array on the root
-    using comm.Gather. This is summed, and an empty receive array is created of
-    the proper size. Then comm.Gatherv receives each process' list of tags and
-    concatenates them into a single list on the root. The root calculates the
-    list of unique labels and the number of unique labels. These are then
-    broadcasted to the processes as a tuple containing a NumPy array and an integer.
-
-    Parameters:
-        region: dolfinx.mesh.Meshtags
-            The boundary facet meshtags from mesh_reader
-
-    Returns:
-        region_labels : np.array.int64
-            A NumPy array of unique labels; now identical on all processes.
-
-        n_labels : int
-            An integer count of unique labels; now identical on all processes.
-
-    Notes
-    -----
-    - For this particular clustered.xdmf mesh:
-    - 1,042,301 cells
-    - 2,164,216 facets (in the whole mesh, with no repeats)
-    - 159,228 facets on a boundary
-
-    """
-    # Access tags from facets counted by process
-    region_labels = region.values
-
-    # Cast to int64
-    region_labels = np.array(region_labels, dtype=np.int64)
-    # Force into positive int32 range
-    region_labels = (region_labels % (2 ** 31)).astype(np.int64)
-
-    # Package data
-    sendbuf = region_labels
-    # Gathers the length of the locally computed facet tags
-    sendcounts = np.array(comm.gather(len(sendbuf), root=root))
-
-    # Creates an empty NumPy array on the root process for storing all region labels
-    if rank == root:
-        recvbuf = np.empty(sum(sendcounts), dtype=np.int64)
-    else:
-        recvbuf = None
-
-    # Collects all sendbuf arrays from each process and concatenates onto recvbuf on root
-    comm.Gatherv(sendbuf=sendbuf, recvbuf=(recvbuf, sendcounts), root=root)
-
-    if rank == root:
-        # Calculates the distinct labels
-        unique_labels = np.array(list(set(recvbuf)))
-        # Calculates the number of distinct labels
-        n_labels = np.array([len(unique_labels)], dtype=np.int64)
-    else:
-        n_labels = np.array([0], dtype=np.int64)
-
-    # Broadcast n_labels to all processes
-    comm.Bcast(n_labels, root=root)
-
-    # Change name unique_labels to region_labels
-    if rank == root:
-        region_labels = unique_labels
-    else:
-        region_labels = np.zeros(n_labels[0], dtype=np.int64)
-
-    # Broadcast region_labels to all processes
-    comm.Bcast(region_labels, root=root)
-
-    # Convert n_labels to scalar
-    n_labels = int(n_labels[0])
-
-    # Return tuple (region_labels, n_labels) or e.g. ([1, 2, ...], 2)
-    return region_labels, n_labels
-
-
 def compute_vessel_orientation(subdomains, boundaries, mesh, res_fldr, save_subres):
     """
     Orientation is computed based on a flow field originating from the cortical
@@ -235,20 +154,6 @@ def compute_vessel_orientation(subdomains, boundaries, mesh, res_fldr, save_subr
 
     return e, main_direction
 
-
-def comp_transf_mat(e0, e1):
-    v = np.cross(e0, e1)
-    s = np.linalg.norm(v)  # sine
-    c = np.dot(e0, e1)  # cosine
-    I = np.identity(3)  # identity matrix
-    u = v / s
-    ux = np.array([[0, -u[2], u[1]], [u[2], 0, -u[0]], [-u[1], u[0], 0]])
-
-    T = c * I + s * ux + (1 - c) * np.tensordot(u, u, axes=0)
-
-    return T
-
-
 def permeability_tensor_computation(
         K_space: Optional[dolfinx.fem.function.FunctionSpace],
         subdomains: Optional[dolfinx.mesh.MeshTags],
@@ -343,4 +248,138 @@ def permeability_tensor_computation(
     K1.x.scatter_forward()
 
     return K1
+
+def scale_permeabilities(subdomains, K1, K2, K3, \
+                         K1_ref_gm, K2_ref_gm, K3_ref_gm, gmowm_perm_rat,res_fldr,**kwarg):
+
+    loc1 = subdomains.indices[np.where(subdomains.values == 11)] # white matter cell indices
+    loc2 = subdomains.indices[np.where(subdomains.values == 12)] # gray matter cell indices
+        
+    K1_array = K1.x.array
+    K2_array = K2.x.array
+    K3_array = K3.x.array
+    
+    # obtain reference values    
+    K1_ref_wm = K1_ref_gm/gmowm_perm_rat
+    K2_ref_wm = K2_ref_gm/gmowm_perm_rat
+    K3_ref_wm = K3_ref_gm/gmowm_perm_rat
+    
+    location = 0
+    for loc in [loc1,loc2]:
+        for i in range(len(loc)):
+            idx1 = int(loc[i])*9
+            idx2 = int(loc[i])*9+9
+            if location == 0: #WM
+                K1_array[idx1:idx2] *= K1_ref_wm
+                K3_array[idx1:idx2] *= K3_ref_wm
+                K2_array[loc[i]] = K2_ref_wm
+            else: #GM
+                K1_array[idx1:idx2] *= K1_ref_gm
+                K3_array[idx1:idx2] *= K3_ref_gm
+                K2_array[loc[i]] = K2_ref_gm
+        location = location + 1
+    
+    K1.x.array[:] = K1_array
+    K2.x.array[:] = K2_array
+    K3.x.array[:] = K3_array
+    
+    return K1, K2, K3
+
+
+def region_label_assembler(region: Optional[dolfinx.mesh.MeshTags]) -> tuple[np.ndarray, int]:
+    """
+    Returns a list of unique region tags and how many unique regions there are.
+
+    The 2,164,216 faces from the mesh are split between each process, and the
+    attached meshtags are noted. The integer tags are recast. A list of the number
+    of faces that each process has managed is gathered in an array on the root
+    using comm.Gather. This is summed, and an empty receive array is created of
+    the proper size. Then comm.Gatherv receives each process' list of tags and
+    concatenates them into a single list on the root. The root calculates the
+    list of unique labels and the number of unique labels. These are then
+    broadcasted to the processes as a tuple containing a NumPy array and an integer.
+
+    Parameters:
+        region: dolfinx.mesh.Meshtags
+            The boundary facet meshtags from mesh_reader
+
+    Returns:
+        region_labels : np.array.int64
+            A NumPy array of unique labels; now identical on all processes.
+
+        n_labels : int
+            An integer count of unique labels; now identical on all processes.
+
+    Notes
+    -----
+    - For this particular clustered.xdmf mesh:
+    - 1,042,301 cells
+    - 2,164,216 facets (in the whole mesh, with no repeats)
+    - 159,228 facets on a boundary
+
+    """
+    # Access tags from facets counted by process
+    region_labels = region.values
+
+    # Cast to int64
+    region_labels = np.array(region_labels, dtype=np.int64)
+    # Force into positive int32 range
+    region_labels = (region_labels % (2 ** 31)).astype(np.int64)
+
+    # Package data
+    sendbuf = region_labels
+    # Gathers the length of the locally computed facet tags
+    sendcounts = np.array(comm.gather(len(sendbuf), root=root))
+
+    # Creates an empty NumPy array on the root process for storing all region labels
+    if rank == root:
+        recvbuf = np.empty(sum(sendcounts), dtype=np.int64)
+    else:
+        recvbuf = None
+
+    # Collects all sendbuf arrays from each process and concatenates onto recvbuf on root
+    comm.Gatherv(sendbuf=sendbuf, recvbuf=(recvbuf, sendcounts), root=root)
+
+    if rank == root:
+        # Calculates the distinct labels
+        unique_labels = np.array(list(set(recvbuf)))
+        # Calculates the number of distinct labels
+        n_labels = np.array([len(unique_labels)], dtype=np.int64)
+    else:
+        n_labels = np.array([0], dtype=np.int64)
+
+    # Broadcast n_labels to all processes
+    comm.Bcast(n_labels, root=root)
+
+    # Change name unique_labels to region_labels
+    if rank == root:
+        region_labels = unique_labels
+    else:
+        region_labels = np.zeros(n_labels[0], dtype=np.int64)
+
+    # Broadcast region_labels to all processes
+    comm.Bcast(region_labels, root=root)
+
+    # Convert n_labels to scalar
+    n_labels = int(n_labels[0])
+
+    # Return tuple (region_labels, n_labels) or e.g. ([1, 2, ...], 2)
+    return region_labels, n_labels
+
+
+
+def comp_transf_mat(e0, e1):
+    v = np.cross(e0, e1)
+    s = np.linalg.norm(v)  # sine
+    c = np.dot(e0, e1)  # cosine
+    I = np.identity(3)  # identity matrix
+    u = v / s
+    ux = np.array([[0, -u[2], u[1]], [u[2], 0, -u[0]], [-u[1], u[0], 0]])
+
+    T = c * I + s * ux + (1 - c) * np.tensordot(u, u, axes=0)
+
+    return T
+
+
+
 
