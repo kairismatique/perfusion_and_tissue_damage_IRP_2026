@@ -18,6 +18,17 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 root = 0
 
+def set_coupling_coeff(beta):
+    beta12 = beta[0,1]
+    beta13 = beta[0,2]
+    beta23 = beta[1,2]
+    
+    beta21 = beta12
+    beta31 = beta13
+    beta32 = beta23
+    
+    return beta12, beta13, beta21, beta23, beta31, beta32
+
 
 def region_label_assembler(region: Optional[dolfinx.mesh.MeshTags]) -> tuple[np.ndarray, int]:
     """
