@@ -285,6 +285,30 @@ def scale_permeabilities(subdomains, K1, K2, K3, \
     
     return K1, K2, K3
 
+def scale_coupling_coefficients(subdomains, beta12gm, beta23gm, gmowm_beta_rat, \
+                                K2_space, res_fldr,**kwarg): 
+    
+    loc1 = subdomains.indices[np.where(subdomains.values == 11)] # white matter cell indices
+    loc2 = subdomains.indices[np.where(subdomains.values == 12)] # gray matter cell indices
+    
+    beta12 = fem.Function(K2_space)
+    beta23 = fem.Function(K2_space)
+    beta12_array = beta12.x.array
+    beta23_array = beta23.x.array
+    
+    beta12_array[loc2] = beta12gm
+    beta12_array[loc1] = beta12gm/gmowm_beta_rat
+    beta23_array[loc2] = beta23gm
+    beta23_array[loc1] = beta23gm/gmowm_beta_rat
+    
+    beta12.x.array[:] = beta12_array
+    beta12.x.scatter_forward()
+
+    beta23.x.array[:] = beta23_array
+    beta23.x.scatter_forward()
+    
+    return beta12, beta23
+
 
 def region_label_assembler(region: Optional[dolfinx.mesh.MeshTags]) -> tuple[np.ndarray, int]:
     """
