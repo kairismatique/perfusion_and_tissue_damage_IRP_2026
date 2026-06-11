@@ -406,4 +406,154 @@ def comp_transf_mat(e0, e1):
 
 
 
+def _project(expression, target_space):
+    """Project an UFL expression onto a given FunctionSpace using DOLFINx.
+    This function assembles the necessary linear system and solves it to obtain
+    the projected function. It handles both scalar and vector expressions, and
+    can be used for any compatible UFL expression and target function space.
+    This function replaces the project() from Legacy"""
+      
+    from dolfinx.fem.petsc import assemble_matrix, assemble_vector, apply_lifting
+    from petsc4py import PETSc
+
+    u = ufl.TrialFunction(target_space)
+    v = ufl.TestFunction(target_space)
+
+    a_form = fem.form(ufl.inner(u, v) * ufl.dx)
+    L_form = fem.form(ufl.inner(expression, v) * ufl.dx)
+
+    # Assemble matrix and vector
+    A = assemble_matrix(a_form, bcs=[])
+    A.assemble()
+    b = assemble_vector(L_form)
+    apply_lifting(b, [a_form], bcs=[[]])
+    b.ghostUpdate(addv=PETSc.InsertMode.ADD, mode=PETSc.ScatterMode.REVERSE)
+
+    # Configuration of KSP solver (BiCGSTAB + Jacobi preconditioner)
+    ksp = PETSc.KSP().create(target_space.mesh.comm)
+    ksp.setOperators(A)
+    ksp.setType("bcgs")        # Bicgstab
+    ksp.getPC().setType("jacobi") 
+    ksp.setFromOptions()
+    ksp.setUp()
+
+    result = fem.Function(target_space)
+    ksp.solve(b, result.x.petsc_vec)
+    result.x.scatter_forward()
+    
+    # Clean up PETSc objects
+    A.destroy()
+    ksp.destroy()
+
+    return result
+
+def compute_my_variables(p, K1, K2, K3, beta12, beta23, p_venous,
+                         Vp, Vvel, K2_space,
+                         configs, myResults, compartmental_model, rank, comm, **kwarg):
+    """
+    Compute derived variables (pressures, velocities, perfusion) and save them in a FEniCSx-friendly format.
+    """
+    save_data = kwarg.get('save_data', True)
+    out_vars = configs['output']['res_vars']
+    mesh = K2_space.mesh
+
+    if len(out_vars) > 0:
+        if compartmental_model == 'acv':
+            # IMPORTANT FEniCSx : We extract and COLLAPSE (.collapse) the sub-functions 
+            # so that DOLFINx can save them separately in XDMF files!
+            p1 = p.sub(0).collapse()
+            p2 = p.sub(1).collapse()
+            p3 = p.sub(2).collapse()
+
+            # Pour les calculs mathématiques/UFL (gradients, lois), on utilise ufl.split
+            # For mathematical operations/UFL (gradients, Darcy's law), we use ufl.split 
+            p1_ufl, p2_ufl, p3_ufl = ufl.split(p)
+
+            if 'perfusion' in out_vars:
+                myResults['perfusion'] = _project(beta12 * (p1_ufl - p2_ufl), K2_space)
+
+        elif compartmental_model == 'a':
+            # Artériel : p1 is the main solved field
+            p1 = p  
+            p1_ufl = p
+
+            # Construxtion of constant venous pressure p3
+            p3 = fem.Function(Vp)
+            p3.x.array[:] = float(p_venous)
+            p3.x.scatter_forward()
+            p3_ufl = p3
+
+            # Capillary pressure p2 (Algebraic weighted average)
+            p2 = _project((beta12 * p1 + beta23 * p3) / (beta12 + beta23), Vp)
+            p2_ufl = p2
+
+            # Total exchange coefficient (harmonic mean of beta12 and beta23)
+            beta_total = _project(1.0 / (1.0 / beta12 + 1.0 / beta23), K2_space)
+
+            if 'perfusion' in out_vars:
+                p_venous_const = fem.Constant(mesh, float(p_venous))
+                myResults['perfusion'] = _project(beta_total * (p1 - p_venous_const), K2_space)
+
+        else:
+            raise Exception("Unknown compartmental model: " + compartmental_model)
+
+        # Name assignment is important for DOLFINx to save the functions with the correct names in XDMF files!
+        p1.name = "press1"
+        p2.name = "press2"
+        p3.name = "press3"
+        
+        # Storing in the results dictionary
+        myResults['press1'] = p1
+        myResults['press2'] = p2
+        myResults['press3'] = p3
+        myResults['K1']     = K1
+        myResults['K2']     = K2
+        myResults['K3']     = K3
+        myResults['beta12'] = beta12
+        myResults['beta23'] = beta23
+        
+        # Gestion of permeability tensors for UFL (Darcy's law)
+        K1_tensor = K1
+        K3_tensor = K3
+        K2_scalar = K2  # Capillary permeability is treated as a scalar for Darcy's law
+
+        # Computation of flow velocities using Darcy's law (-K * grad(p))
+        if 'vel1' in out_vars:
+            myResults['vel1'] = _project(-K1_tensor * ufl.grad(p1_ufl), Vvel)
+            myResults['vel1'].name = "vel1"
+        if 'vel2' in out_vars:
+            myResults['vel2'] = _project(-K2_scalar * ufl.grad(p2_ufl), Vvel)
+            myResults['vel2'].name = "vel2"
+        if 'vel3' in out_vars:
+            myResults['vel3'] = _project(-K3_tensor * ufl.grad(p3_ufl), Vvel)
+            myResults['vel3'].name = "vel3"
+
+    else:
+        if rank == 0:
+            print("No variable has been requested for saving in the configuration.")
+
+    if save_data:
+        res_keys = set(myResults.keys())
+        for myvar in out_vars:
+            if myvar in res_keys:
+                filepath = configs['output']['res_fldr'] + myvar + '.xdmf'
+                field = myResults[myvar]
+
+                if myvar == 'perfusion':
+                    # Scale the perfusion (x 6000) via the local NumPy array
+                    perf_scaled = fem.Function(field.function_space)
+                    perf_scaled.name = "perfusion"
+                    perf_scaled.x.array[:] = field.x.array[:] * 6000.0
+                    perf_scaled.x.scatter_forward()
+                    
+                    with io.XDMFFile(comm, filepath, "w") as myfile:
+                        myfile.write_mesh(mesh)
+                        myfile.write_function(perf_scaled)
+                else:
+                    with io.XDMFFile(comm, filepath, "w") as myfile:
+                        myfile.write_mesh(mesh)
+                        myfile.write_function(field)
+            else:
+                if rank == 0:
+                    print(f"Warning: the variable '{myvar}' could not be saved because it is not defined.")
 
