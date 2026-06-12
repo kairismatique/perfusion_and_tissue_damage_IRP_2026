@@ -123,9 +123,14 @@ def apply_dirichlet_BC(
 
     return BCs
 
-def apply_neumann_BC(b1, integrals_N, index, v_1, dS, boundary_id):
-   
-    area = fem.assemble_scalar(fem.Constant(mesh, 1.0) * dS(boundary_id, domain=mesh))
+def apply_neumann_BC(mesh_obj, b1, integrals_N, index, v_1, dS, boundary_id):
+
+    # We compile with fem.form()
+    form_area = fem.form(fem.Constant(mesh_obj, 1.0) *dS(boundary_id, domain=mesh_obj))
+
+    # Assemble simplified form
+    area = fem.assemble_scalar(form_area)
+    area = mesh_obj.comm.allreduce(area, op=mesh._MPI.SUM)
     b1[index] = b1[index] / area
     # b1 includes the average surface-normal velocity for the perfusion regions
     # computed from the volumetric flow rate [mm^3/s] and the surface area [mm^2]
@@ -134,7 +139,6 @@ def apply_neumann_BC(b1, integrals_N, index, v_1, dS, boundary_id):
         integrals_N.append(b1[index] * v_1 * dS(boundary_id))
 
     return integrals_N
-
 
 def apply_mixed_BC(
     mesh_obj,
