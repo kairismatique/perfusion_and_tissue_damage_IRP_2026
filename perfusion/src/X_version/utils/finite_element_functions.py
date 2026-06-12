@@ -1,7 +1,7 @@
 import time
 import basix
 import numpy as np
-from . import suppl_fcts_x
+from . import suppl_fcts
 import ufl
 from dolfinx import fem, mesh
 from dolfinx.fem import petsc
@@ -99,13 +99,29 @@ def apply_dirichlet_BC(
     index,
     boundary_id,
 ):
+    # We get the mesh
+    domain = V_space.mesh
     
-    if data_dimension_greater_than_1:
-        BCs.append(fem.dirichletbc(V_space, fem.Constant(mesh, BC_data[index, 2]), boundaries, boundary_id))
-    else:
-        BCs.append(fem.dirichletbc(V_space, fem.Constant(mesh, BC_data[2]), boundaries, boundary_id))
-    return BCs
+    # Determine dimension of facets (boundary entities) for locating dofs
+    fdim = domain.topology.dim - 1
+    
+    # We find the facets (boundary entities) corresponding to this boundary_id
+    facets = boundaries.find(boundary_id)
 
+    # We locate the degrees of freedom (dofs) on these facets 
+    dofs = fem.locate_dofs_topological(V_space, fdim, facets)
+  
+    # We prepare the constant value for the Dirichlet BC, using the appropriate column from BC_data based on its dimension.
+    if data_dimension_greater_than_1:
+        bc_value = fem.Constant(domain, BC_data[index, 2])
+    else:
+        bc_value = fem.Constant(domain, BC_data[2])
+    
+    # We create the Dirichlet boundary condition (Syntax: value, dofs, Space)
+    new_bc = fem.dirichletbc(bc_value, dofs, V_space)
+    BCs.append(new_bc)
+
+    return BCs
 
 def apply_neumann_BC(b1, integrals_N, index, v_1, dS, boundary_id):
    
@@ -148,7 +164,7 @@ def apply_mixed_BC(
         )
     elif bc_type_flag == 1:
         integrals_N = apply_neumann_BC(
-            mesh_obj, b1, integrals_N, index, v_1, dS, boundary_id
+            b1, integrals_N, index, v_1, dS, boundary_id
         )
     else:
         raise Exception(
@@ -219,7 +235,7 @@ def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
             for i in range(n_labels):
                 BCs.append(fem.dirichletbc(V.sub(2), fem.Constant(mesh, float(pv)), boundaries, int(boundary_labels[i])))
 
-        dS = ds(subdomain_data=boundaries)
+        dS = ufl.ds(subdomain_data=boundaries)
         if inlet_BC_type == 'DBC': # Dirichlet BC
             for i in range(n_labels):
                 boundary_id = int(boundary_labels[i])
@@ -240,7 +256,7 @@ def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
             raise Exception("inlet_BC_type must be Neumann, Dirichlet or mixed ('NBC', 'DBC' or 'mixed)")
 
     else:
-        boundary_labels, n_labels = suppl_fcts_x.region_label_assembler(boundaries)
+        boundary_labels, n_labels = suppl_fcts.region_label_assembler(boundaries)
         for i in range(n_labels):
             if boundary_labels[i] > 2:
                 # Brain surface boundary
