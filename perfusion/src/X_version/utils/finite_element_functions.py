@@ -43,8 +43,8 @@ def allocation_functions_space(mesh_obj, fe_degr, **kwarg):
         Vp = fem.functionspace(mesh_obj, mixed_el)
 
         v_1, v_2, v_3 = TestFunctions(Vp)
+        p_1, p_2, p_3 = ufl.TrialFunctions(Vp)
         p = TrialFunction(Vp)
-        p_1, p_2, p_3 = split(p)
 
     elif model_type == "a":
         P_el = basix.ufl.element("Lagrange", cell_type, fe_degr)
@@ -128,7 +128,7 @@ def apply_neumann_BC(mesh_obj, b1, integrals_N, index, v_1, dS, boundary_id):
     # We compile with fem.form()
     form_area = fem.form(fem.Constant(mesh_obj, 1.0) *dS(boundary_id, domain=mesh_obj))
 
-    # Assemble simplified form
+    # Assemble simplified
     area = fem.assemble_scalar(form_area)
     area = mesh_obj.comm.allreduce(area, op=mesh._MPI.SUM)
     b1[index] = b1[index] / area
@@ -139,6 +139,7 @@ def apply_neumann_BC(mesh_obj, b1, integrals_N, index, v_1, dS, boundary_id):
         integrals_N.append(b1[index] * v_1 * dS(boundary_id))
 
     return integrals_N
+
 
 def apply_mixed_BC(
     mesh_obj,
@@ -168,7 +169,7 @@ def apply_mixed_BC(
         )
     elif bc_type_flag == 1:
         integrals_N = apply_neumann_BC(
-            b1, integrals_N, index, v_1, dS, boundary_id
+            mesh_obj, b1, integrals_N, index, v_1, dS, boundary_id
         )
     else:
         raise Exception(
@@ -230,6 +231,7 @@ def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
     BCs = []
     integrals_N = []
     V_space = V.sub(0) if model_type == 'acv' else V
+    
     # Based on inlet boundary file
     if read_inlet_boundary:
         BC_data, b1, boundary_labels, data_dimension_greater_than_1 = read_boundary_conditions(inlet_boundary_file)
@@ -237,7 +239,12 @@ def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
 
         if model_type == 'acv':
             for i in range(n_labels):
-                BCs.append(fem.dirichletbc(V.sub(2), fem.Constant(mesh, float(pv)), boundaries, int(boundary_labels[i])))
+                boundary_id = int(boundary_labels[i])
+                facet_indices = np.where(boundaries.values == boundary_id)[0]
+                boundary_facets = boundaries.indices[facet_indices]
+                # CORRECTION : Localisation of DOFs for compartment 3 (venous) 
+                dofs_v3 = fem.locate_dofs_topological(V.sub(2), mesh.topology.dim - 1, boundary_facets)
+                BCs.append(fem.dirichletbc(fem.Constant(mesh, float(pv)), dofs_v3, V.sub(2)))
 
         dS = ufl.ds(subdomain_data=boundaries)
         if inlet_BC_type == 'DBC': # Dirichlet BC
@@ -254,8 +261,7 @@ def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
             for i in range(n_labels):
                 boundary_id = int(boundary_labels[i])
                 integrals_N, BCs = apply_mixed_BC(mesh, boundaries, integrals_N, BCs, BC_data, V_space, b1, dS, v_1, i,
-                   data_dimension_greater_than_1, boundary_id)
-
+                                                   data_dimension_greater_than_1, boundary_id)
         else:
             raise Exception("inlet_BC_type must be Neumann, Dirichlet or mixed ('NBC', 'DBC' or 'mixed)")
 
@@ -264,13 +270,15 @@ def set_up_fe_solver(mesh, boundaries, V, v_1, v_2, v_3, \
         for i in range(n_labels):
             if boundary_labels[i] > 2:
                 # Brain surface boundary
+                boundary_id = boundary_labels[i]
+                facet_indices = np.where(boundaries.values == boundary_id)[0]
+                boundary_facets = boundaries.indices[facet_indices]
+                
                 if inlet_BC_type == 'DBC':
-                    boundary_id = boundary_labels[i]
-                    n_labels = len(boundary_labels)
-                    facet_indices = np.where(boundaries.values == boundary_id)[0]
-                    boundary_facets = boundaries.indices[facet_indices]
-                    dofs_p = fem.locate_dofs_topological(V, mesh.topology.dim - 1, boundary_facets)
+                    # CORRECTION : We give V_space (V.sub(0)) instead of V
+                    dofs_p = fem.locate_dofs_topological(V_space, mesh.topology.dim - 1, boundary_facets)
                     BCs.append(fem.dirichletbc(fem.Constant(mesh, float(pa)), dofs_p, V_space))
+                    
                 if model_type == "acv":
                     dofs_v = fem.locate_dofs_topological(V.sub(2), mesh.topology.dim - 1, boundary_facets)
                     BCs.append(fem.dirichletbc(fem.Constant(mesh, float(pv)), dofs_v, V.sub(2)))
